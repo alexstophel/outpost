@@ -12,6 +12,7 @@ class SetupController < ApplicationController
     @user = @account.users.build(user_params.merge(admin: true))
 
     if @account.save
+      create_general_room(@account, @user)
       start_new_session_for @user
       redirect_to root_path, notice: "Welcome to Outpost!"
     else
@@ -31,5 +32,10 @@ class SetupController < ApplicationController
 
   def user_params
     params.require(:user).permit(:email_address, :password, :password_confirmation)
+  end
+
+  def create_general_room(account, user)
+    general = account.rooms.create!(name: "General")
+    general.memberships.create!(user: user)
   end
 end

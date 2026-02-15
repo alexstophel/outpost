@@ -11,6 +11,7 @@ class JoinController < ApplicationController
     @user = @account.users.build(user_params)
 
     if @user.save
+      add_to_general_room(@user)
       start_new_session_for @user
       redirect_to root_path, notice: "Welcome to #{@account.name}!"
     else
@@ -31,5 +32,10 @@ class JoinController < ApplicationController
 
   def user_params
     params.require(:user).permit(:email_address, :password, :password_confirmation)
+  end
+
+  def add_to_general_room(user)
+    general = @account.rooms.find_by(name: "General")
+    general.memberships.create!(user: user) if general
   end
 end

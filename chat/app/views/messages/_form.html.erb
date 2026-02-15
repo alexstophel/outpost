@@ -1,0 +1,21 @@
+<%= form_with(
+  model: message,
+  url: room_messages_path(room),
+  id: "message_form",
+  class: "flex gap-2",
+  data: { controller: "message-form", action: "turbo:submit-end->message-form#reset" }
+) do |form| %>
+  <%= form.text_area :body,
+    placeholder: "Message ##{room.name.downcase}",
+    rows: 1,
+    class: "flex-1 px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none focus:shadow-[0_0_10px_rgba(0,255,136,0.2)] placeholder:text-neutral-600 resize-none text-sm",
+    data: { 
+      message_form_target: "input",
+      action: "keydown->message-form#handleKeydown input->message-form#autoResize"
+    },
+    autofocus: true
+  %>
+  <%= form.submit "Send",
+    class: "px-4 py-2 bg-[#00ff88] hover:bg-[#00cc6a] text-black font-medium border-2 border-black shadow-[3px_3px_0_0_#000] hover:shadow-[1px_1px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer uppercase tracking-wide text-sm"
+  %>
+<% end %>

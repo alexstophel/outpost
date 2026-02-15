@@ -3,7 +3,11 @@ class HomeController < ApplicationController
   before_action :redirect_based_on_state, only: :index
 
   def index
-    # Only reached if authenticated and setup complete
+    # Redirect authenticated users to their first room (General)
+    general = Current.user.rooms.first
+    if general
+      redirect_to room_path(general)
+    end
   end
 
   private

@@ -10,13 +10,41 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_073732) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_081709) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "invite_token"
     t.string "name"
     t.datetime "updated_at", null: false
     t.index ["invite_token"], name: "index_accounts_on_invite_token", unique: true
+  end
+
+  create_table "memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["room_id", "user_id"], name: "index_memberships_on_room_id_and_user_id", unique: true
+    t.index ["room_id"], name: "index_memberships_on_room_id"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.integer "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["room_id"], name: "index_messages_on_room_id"
+    t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
+  create_table "rooms", force: :cascade do |t|
+    t.integer "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_rooms_on_account_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -39,6 +67,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_073732) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "memberships", "rooms"
+  add_foreign_key "memberships", "users"
+  add_foreign_key "messages", "rooms"
+  add_foreign_key "messages", "users"
+  add_foreign_key "rooms", "accounts"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "accounts"
 end

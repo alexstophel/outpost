@@ -1,21 +1,26 @@
 Rails.application.routes.draw do
   # Setup (first-run only)
-  resource :setup, only: [:new, :create], controller: "setup"
+  resource :setup, only: [ :new, :create ], controller: "setup"
 
   # Authentication
   resource :session
 
   # Settings (admin only)
-  resource :settings, only: [:show] do
+  resource :settings, only: [ :show ] do
     post :regenerate_invite_token, on: :member
   end
 
   # User management (admin only)
-  resources :users, only: [:update, :destroy]
+  resources :users, only: [ :update, :destroy ]
 
   # Join via invite link
   get "join/:token", to: "join#show", as: :join
   post "join/:token", to: "join#create"
+
+  # Chat
+  resources :rooms, only: [ :show ] do
+    resources :messages, only: [ :create ]
+  end
 
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
