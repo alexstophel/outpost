@@ -61,8 +61,7 @@ class User < ApplicationRecord
   def direct_message_rooms_with_unread_status
     rooms.direct_messages
       .left_joins(:messages)
-      .left_joins(:room_reads)
-      .where("room_reads.user_id = ? OR room_reads.user_id IS NULL", id)
+      .joins("LEFT OUTER JOIN room_reads ON room_reads.room_id = rooms.id AND room_reads.user_id = #{id}")
       .group("rooms.id")
       .select(
         "rooms.*",
