@@ -18,7 +18,7 @@ export default class extends Controller {
     }
 
     try {
-      const registration = await navigator.serviceWorker.register("/service-worker.js")
+      const registration = await navigator.serviceWorker.register("/service-worker")
       this.swRegistration = registration
       
       // Check if already subscribed
