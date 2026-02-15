@@ -1,0 +1,186 @@
+<%# Room Settings Dropdown %>
+<% if room.channel? %>
+  <div data-controller="modal">
+  <div
+    class="fixed z-40 hidden"
+    data-room-settings-target="dropdown"
+    style="top: 60px; right: 16px;"
+  >
+    <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a] w-72">
+      <%# Room info %>
+      <div class="p-4 border-b-2 border-neutral-800">
+        <div class="flex items-center gap-2 text-neutral-200">
+          <% if room.visibility_private_room? %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          <% else %>
+            <span class="text-neutral-500">#</span>
+          <% end %>
+          <span class="font-medium"><%= room.name.downcase %></span>
+        </div>
+        <div class="text-xs text-neutral-500 mt-1">
+          <%= room.visibility_private_room? ? "Private room" : "Public room" %> · <%= members.count %> <%= "member".pluralize(members.count) %>
+        </div>
+      </div>
+
+      <%# Members list %>
+      <div class="p-4 border-b-2 border-neutral-800">
+        <div class="text-xs uppercase tracking-wide text-neutral-500 mb-2">Members</div>
+        <div class="space-y-2 max-h-40 overflow-y-auto" data-room-settings-target="membersList">
+          <% members.each do |membership| %>
+            <div class="flex items-center justify-between gap-2 py-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <%= render "users/avatar", user: membership.user, size: "xs" %>
+                <span class="text-sm text-neutral-300 truncate"><%= membership.user.name %></span>
+                <% if membership.admin? %>
+                  <span class="text-xs text-[#00ff88]">admin</span>
+                <% end %>
+              </div>
+              <% if policy.admin? && policy.can_edit_membership? && membership.user != Current.user %>
+                <button
+                  type="button"
+                  class="text-neutral-500 hover:text-red-400 transition-colors p-1"
+                  data-action="click->room-settings#confirmRemoveMember"
+                  data-membership-id="<%= membership.id %>"
+                  data-user-name="<%= membership.user.name %>"
+                  title="Remove member"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Add member (admin only, not for default room) %>
+      <% if policy.admin? && policy.can_edit_membership? %>
+        <div class="p-4 border-b-2 border-neutral-800">
+          <div class="text-xs uppercase tracking-wide text-neutral-500 mb-2">Add Member</div>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600 text-sm"
+            data-room-settings-target="addMemberInput"
+            data-action="input->room-settings#searchUsers"
+            autocomplete="off"
+          >
+          <div
+            class="mt-1 max-h-32 overflow-y-auto hidden"
+            data-room-settings-target="addMemberResults"
+          ></div>
+        </div>
+      <% end %>
+
+      <%# Actions %>
+      <div class="p-4 space-y-2">
+        <% if policy.can_edit_membership? %>
+          <%= button_to room_membership_path(room, Current.user.membership_for(room)), 
+              method: :delete,
+              class: "w-full px-3 py-2 text-sm text-neutral-400 hover:text-neutral-200 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 uppercase tracking-wide transition-colors text-center cursor-pointer" do %>
+            Leave Room
+          <% end %>
+        <% end %>
+        
+        <% if policy.can_delete? %>
+          <button
+            type="button"
+            data-action="click->modal#open"
+            class="w-full px-3 py-2 text-sm text-red-400 hover:text-red-300 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 uppercase tracking-wide transition-colors text-center cursor-pointer"
+          >
+            Delete Room
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Delete Room Confirmation Modal %>
+  <% if policy.can_delete? %>
+    <dialog 
+      data-modal-target="dialog"
+      data-action="click->modal#closeOnBackdropClick"
+      class="bg-transparent p-0 backdrop:bg-black/70 fixed inset-0 m-auto"
+    >
+      <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a] w-[calc(100vw-2rem)] sm:w-80 max-w-md mx-4 sm:mx-0">
+        <div class="px-4 py-3 border-b-2 border-neutral-700 flex items-center justify-between">
+          <h3 class="text-neutral-200 uppercase tracking-wide text-sm">Delete Room</h3>
+          <button 
+            type="button" 
+            data-action="click->modal#close"
+            class="text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-neutral-300 text-sm mb-4">Are you sure you want to delete <strong class="text-neutral-200"><%= room.name %></strong>? This action cannot be undone.</p>
+          <div class="flex gap-2 justify-end">
+            <button 
+              type="button"
+              data-action="click->modal#close"
+              class="px-3 py-1.5 text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-2 border-neutral-600 shadow-[2px_2px_0_0_#333] hover:shadow-[1px_1px_0_0_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide"
+            >
+              Cancel
+            </button>
+            <%= button_to room_path(room), 
+                method: :delete, 
+                class: "px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white font-medium border-2 border-red-900 shadow-[2px_2px_0_0_#7f1d1d] hover:shadow-[1px_1px_0_0_#7f1d1d] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide" do %>
+              Delete
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </dialog>
+  <% end %>
+
+  <%# Remove Member Confirmation Modal %>
+  <% if policy.admin? %>
+    <dialog 
+      data-room-settings-target="removeMemberDialog"
+      data-action="click->room-settings#closeRemoveMemberOnBackdropClick"
+      class="bg-transparent p-0 backdrop:bg-black/70 fixed inset-0 m-auto"
+    >
+      <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a] w-[calc(100vw-2rem)] sm:w-80 max-w-md mx-4 sm:mx-0">
+        <div class="px-4 py-3 border-b-2 border-neutral-700 flex items-center justify-between">
+          <h3 class="text-neutral-200 uppercase tracking-wide text-sm">Remove Member</h3>
+          <button 
+            type="button" 
+            data-action="click->room-settings#closeRemoveMemberDialog"
+            class="text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <p class="text-neutral-300 text-sm mb-4">Are you sure you want to remove <strong class="text-neutral-200" data-room-settings-target="removeMemberName"></strong> from this room?</p>
+          <div class="flex gap-2 justify-end">
+            <button 
+              type="button"
+              data-action="click->room-settings#closeRemoveMemberDialog"
+              class="px-3 py-1.5 text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-2 border-neutral-600 shadow-[2px_2px_0_0_#333] hover:shadow-[1px_1px_0_0_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide"
+            >
+              Cancel
+            </button>
+            <%= form_with url: "#", method: :delete, data: { room_settings_target: "removeMemberForm" } do %>
+              <button 
+                type="submit"
+                class="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white font-medium border-2 border-red-900 shadow-[2px_2px_0_0_#7f1d1d] hover:shadow-[1px_1px_0_0_#7f1d1d] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide"
+              >
+                Remove
+              </button>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </dialog>
+  <% end %>
+  </div>
+<% end %>

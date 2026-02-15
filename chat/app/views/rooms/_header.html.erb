@@ -1,0 +1,77 @@
+<%# Mobile header %>
+<header class="md:hidden flex items-center justify-between px-4 py-3 border-b-2 border-neutral-800 bg-neutral-900">
+  <div class="flex items-center gap-3">
+    <button 
+      class="text-neutral-400 hover:text-neutral-200 p-1"
+      data-action="click->sidebar#open"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <% if room.direct_message? %>
+      <% dm_other_user = room.other_participant(Current.user) %>
+      <h2 class="text-neutral-200 flex items-center gap-2">
+        <%= render "users/avatar", user: dm_other_user, size: "xs" %>
+        <span><%= dm_other_user&.name || "Unknown" %></span>
+      </h2>
+    <% else %>
+      <h2 class="text-neutral-200 flex items-center gap-1">
+        <% if room.visibility_private_room? %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        <% else %>
+          <span class="text-neutral-500">#</span>
+        <% end %>
+        <span><%= room.name.downcase %></span>
+      </h2>
+    <% end %>
+  </div>
+  <% if room.channel? && !room.default_room? %>
+    <button
+      type="button"
+      class="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+      data-action="click->room-settings#toggle"
+      title="Room settings"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+      </svg>
+    </button>
+  <% end %>
+</header>
+
+<%# Desktop header %>
+<header class="hidden md:flex items-center justify-between px-4 py-3 border-b-2 border-neutral-800">
+  <% if room.direct_message? %>
+    <% dm_other_user = room.other_participant(Current.user) %>
+    <h2 class="text-neutral-200 flex items-center gap-2">
+      <%= render "users/avatar", user: dm_other_user, size: "sm" %>
+      <span><%= dm_other_user&.name || "Unknown" %></span>
+    </h2>
+  <% else %>
+    <h2 class="text-neutral-200 flex items-center gap-1">
+      <% if room.visibility_private_room? %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      <% else %>
+        <span class="text-neutral-500">#</span>
+      <% end %>
+      <span><%= room.name.downcase %></span>
+    </h2>
+    <% unless room.default_room? %>
+      <button
+        type="button"
+        class="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+        data-action="click->room-settings#toggle"
+        title="Room settings"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+        </svg>
+      </button>
+    <% end %>
+  <% end %>
+</header>

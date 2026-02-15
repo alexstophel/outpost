@@ -6,7 +6,7 @@ class RoomRead < ApplicationRecord
 
   # Check if there are unread messages
   def unread?
-    room.messages.where("created_at > ?", last_read_at).exists?
+    room.has_messages_since?(last_read_at)
   end
 
   # Mark as read now

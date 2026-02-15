@@ -1,0 +1,105 @@
+<%# Create Room Modal %>
+<div
+  class="fixed inset-0 z-50 hidden"
+  data-room-create-target="modal"
+>
+  <%# Backdrop %>
+  <div 
+    class="absolute inset-0 bg-black/70"
+    data-action="click->room-create#close"
+  ></div>
+  
+  <%# Modal content %>
+  <div class="absolute inset-x-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md">
+    <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a]">
+      <%# Header %>
+      <div class="flex items-center justify-between p-4 border-b-2 border-neutral-800">
+        <h3 class="text-sm uppercase tracking-wide text-neutral-300">Create Room</h3>
+        <button
+          type="button"
+          class="text-neutral-500 hover:text-neutral-300"
+          data-action="click->room-create#close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <%# Form %>
+      <%= form_with url: rooms_path, method: :post, data: { action: "submit->room-create#submit" } do |f| %>
+        <div class="p-4 space-y-4">
+          <%# Room name %>
+          <div>
+            <label class="block text-xs uppercase tracking-wide text-neutral-500 mb-2">Room Name</label>
+            <input
+              type="text"
+              name="room[name]"
+              placeholder="general-chat"
+              class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600"
+              data-room-create-target="nameInput"
+              required
+              autocomplete="off"
+            >
+          </div>
+
+          <%# Visibility %>
+          <div>
+            <label class="block text-xs uppercase tracking-wide text-neutral-500 mb-2">Visibility</label>
+            <div class="space-y-2">
+              <label class="flex items-center gap-3 p-2 cursor-pointer hover:bg-neutral-800 transition-colors group">
+                <input type="radio" name="room[visibility]" value="public" checked class="sr-only peer">
+                <span class="w-4 h-4 border-2 border-neutral-600 peer-checked:border-[#00ff88] peer-checked:bg-[#00ff88] flex-shrink-0"></span>
+                <div>
+                  <div class="text-sm text-neutral-200">Public</div>
+                  <div class="text-xs text-neutral-500">Anyone can find and join</div>
+                </div>
+              </label>
+              <label class="flex items-center gap-3 p-2 cursor-pointer hover:bg-neutral-800 transition-colors group">
+                <input type="radio" name="room[visibility]" value="private" class="sr-only peer">
+                <span class="w-4 h-4 border-2 border-neutral-600 peer-checked:border-[#00ff88] peer-checked:bg-[#00ff88] flex-shrink-0"></span>
+                <div>
+                  <div class="text-sm text-neutral-200">Private</div>
+                  <div class="text-xs text-neutral-500">Invite only</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <%# Invite members %>
+          <div>
+            <label class="block text-xs uppercase tracking-wide text-neutral-500 mb-2">Invite Members (optional)</label>
+            <input
+              type="text"
+              placeholder="Search by name..."
+              class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600"
+              data-room-create-target="searchInput"
+              data-action="input->room-create#searchUsers"
+              autocomplete="off"
+            >
+            <%# Search results %>
+            <div
+              class="mt-1 max-h-32 overflow-y-auto bg-neutral-800 border-2 border-neutral-700 hidden"
+              data-room-create-target="searchResults"
+            ></div>
+            <%# Selected members %>
+            <div
+              class="flex flex-wrap gap-2 mt-2"
+              data-room-create-target="selectedMembers"
+            ></div>
+          </div>
+        </div>
+
+        <%# Submit button %>
+        <div class="p-4 border-t-2 border-neutral-800">
+          <button
+            type="submit"
+            class="w-full px-4 py-2 bg-[#00ff88] hover:bg-[#00cc6a] text-black font-medium border-2 border-black shadow-[4px_4px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-wide"
+          >
+            Create Room
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,15 +1,14 @@
 class MembershipsController < ApplicationController
   before_action :set_room
-  before_action :set_membership, only: [:destroy]
+  before_action :set_policy
+  before_action :set_membership, only: [ :destroy ]
   before_action :require_editable_membership
 
   # POST /rooms/:room_id/memberships - Add a member (admin only, or join public room)
   def create
-    if @room.visibility_public_room?
-      # Anyone can join a public room
+    if @policy.can_join?
       join_room
-    elsif Current.user.admin_of?(@room)
-      # Admin adding a member to private room
+    elsif @policy.admin?
       add_member
     else
       redirect_to room_path(@room), alert: "You don't have permission to add members."
@@ -19,10 +18,8 @@ class MembershipsController < ApplicationController
   # DELETE /rooms/:room_id/memberships/:id - Remove member or leave room
   def destroy
     if @membership.user == Current.user
-      # User leaving the room
       leave_room
-    elsif Current.user.admin_of?(@room)
-      # Admin removing a member
+    elsif @policy.can_remove_member?(@membership)
       remove_member
     else
       redirect_to room_path(@room), alert: "You don't have permission to remove members."
@@ -32,7 +29,11 @@ class MembershipsController < ApplicationController
   private
 
   def set_room
-    @room = Room.find(params[:room_id])
+    @room = Current.user.account.rooms.find(params[:room_id])
+  end
+
+  def set_policy
+    @policy = RoomPolicy.new(Current.user, @room)
   end
 
   def set_membership
@@ -40,18 +41,14 @@ class MembershipsController < ApplicationController
   end
 
   def require_editable_membership
-    unless @room.membership_editable?
+    unless @policy.can_edit_membership?
       redirect_to room_path(@room), alert: "Membership cannot be changed for the General room."
     end
   end
 
   def join_room
-    if Current.user.member_of?(@room)
-      redirect_to room_path(@room), notice: "You're already a member of this room."
-    else
-      @room.memberships.create!(user: Current.user, role: :member)
-      redirect_to room_path(@room), notice: "You've joined #{@room.name}."
-    end
+    @room.memberships.create!(user: Current.user, role: :member)
+    redirect_to room_path(@room), notice: "You've joined #{@room.name}."
   end
 
   def add_member
@@ -68,22 +65,16 @@ class MembershipsController < ApplicationController
   end
 
   def leave_room
-    # Don't let the last admin leave
-    if @membership.admin? && @room.memberships.admins.count == 1
-      redirect_to room_path(@room), alert: "You can't leave as the only admin. Delete the room or promote another admin first."
-    else
+    if @policy.can_leave?
       @membership.destroy!
       redirect_to root_path, notice: "You've left #{@room.name}."
+    else
+      redirect_to room_path(@room), alert: "You can't leave as the only admin. Delete the room or promote another admin first."
     end
   end
 
   def remove_member
-    # Can't remove yourself via this path (use leave instead)
-    if @membership.user == Current.user
-      redirect_to room_path(@room), alert: "Use 'Leave Room' to remove yourself."
-    else
-      @membership.destroy!
-      head :ok
-    end
+    @membership.destroy!
+    head :ok
   end
 end

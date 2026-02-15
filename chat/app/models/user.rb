@@ -55,6 +55,22 @@ class User < ApplicationRecord
       .order(Arel.sql("MAX(messages.created_at) DESC NULLS LAST"))
   end
 
+  # Get direct message rooms with unread status preloaded (avoids N+1)
+  # Returns rooms with a `has_unread` attribute
+  def direct_message_rooms_with_unread_status
+    rooms.direct_messages
+      .left_joins(:messages)
+      .left_joins(:room_reads)
+      .where("room_reads.user_id = ? OR room_reads.user_id IS NULL", id)
+      .group("rooms.id")
+      .select(
+        "rooms.*",
+        "MAX(messages.created_at) as last_message_at_cache",
+        unread_status_sql
+      )
+      .order(Arel.sql("MAX(messages.created_at) DESC NULLS LAST"))
+  end
+
   # Get channel rooms
   def channel_rooms
     rooms.channels
@@ -90,6 +106,19 @@ class User < ApplicationRecord
 
   private
 
+  def unread_status_sql
+    # Room is unread if:
+    # 1. No room_read exists (never read), OR
+    # 2. There's a message newer than last_read_at
+    <<~SQL.squish
+      CASE
+        WHEN MAX(room_reads.last_read_at) IS NULL THEN 1
+        WHEN MAX(messages.created_at) > MAX(room_reads.last_read_at) THEN 1
+        ELSE 0
+      END as has_unread
+    SQL
+  end
+
   def avatar_file_size
     return unless avatar.attached?
 
@@ -98,4 +127,3 @@ class User < ApplicationRecord
     end
   end
 end
-

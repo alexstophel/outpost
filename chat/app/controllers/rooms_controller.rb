@@ -1,6 +1,6 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [:show, :destroy]
-  before_action :require_room_admin, only: [:destroy]
+  before_action :set_room, only: [ :show, :destroy ]
+  before_action :require_room_admin, only: [ :destroy ]
 
   # GET /rooms - List joinable public rooms (JSON for browse modal)
   def index
@@ -21,11 +21,11 @@ class RoomsController < ApplicationController
 
     # Prepare sidebar data
     @channels = Current.user.channel_rooms
-    @direct_messages = Current.user.direct_message_rooms.includes(:users)
+    @direct_messages = Current.user.direct_message_rooms_with_unread_status.includes(:users)
 
-    # Room members for settings
+    # Room policy and members for settings
+    @policy = RoomPolicy.new(Current.user, @room)
     @members = @room.memberships.includes(:user).order(:created_at)
-    @is_admin = Current.user.admin_of?(@room)
 
     # Mark room as read
     Current.user.mark_room_as_read!(@room)
@@ -58,7 +58,9 @@ class RoomsController < ApplicationController
 
   # DELETE /rooms/:id - Delete a room (admin only)
   def destroy
-    unless @room.deletable?
+    policy = RoomPolicy.new(Current.user, @room)
+
+    unless policy.can_delete?
       redirect_to room_path(@room), alert: "The General room cannot be deleted."
       return
     end
@@ -74,7 +76,8 @@ class RoomsController < ApplicationController
   end
 
   def require_room_admin
-    unless Current.user.admin_of?(@room)
+    policy = RoomPolicy.new(Current.user, @room)
+    unless policy.admin?
       redirect_to room_path(@room), alert: "You must be an admin to do that."
     end
   end

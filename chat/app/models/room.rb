@@ -67,13 +67,25 @@ class Room < ApplicationRecord
     messages.maximum(:created_at) || created_at
   end
 
+  # Check if room has unread messages (uses preloaded has_unread attribute)
+  # This is set by User#direct_message_rooms_with_unread_status
+  def unread?
+    return false unless respond_to?(:has_unread)
+    has_unread == 1
+  end
+
+  # Check if there are messages newer than the given timestamp
+  def has_messages_since?(timestamp)
+    messages.where("created_at > ?", timestamp).exists?
+  end
+
   # Find or create a DM between two users
   def self.find_or_create_dm(user_a, user_b, account)
     # Find existing DM between these exact two users
     existing = direct_messages
       .where(account: account)
       .joins(:memberships)
-      .where(memberships: { user_id: [user_a.id, user_b.id] })
+      .where(memberships: { user_id: [ user_a.id, user_b.id ] })
       .group("rooms.id")
       .having("COUNT(DISTINCT memberships.user_id) = 2")
       .having("COUNT(memberships.id) = 2")
@@ -86,7 +98,7 @@ class Room < ApplicationRecord
       room = create!(
         account: account,
         room_type: :direct_message,
-        name: "DM-#{[user_a.id, user_b.id].sort.join('-')}"
+        name: "DM-#{[ user_a.id, user_b.id ].sort.join('-')}"
       )
       room.memberships.create!(user: user_a)
       room.memberships.create!(user: user_b)
