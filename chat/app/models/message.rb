@@ -9,9 +9,6 @@ class Message < ApplicationRecord
   private
 
   def broadcast_message
-    broadcast_append_to room,
-      target: "messages",
-      partial: "messages/message",
-      locals: { message: Message.includes(user: { avatar_attachment: :blob }).find(id) }
+    MessageBroadcast.new(self).deliver
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_083256) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_154424) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "invite_token"
@@ -89,6 +89,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_083256) do
     t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email_address", null: false
+    t.integer "failed_login_attempts", default: 0, null: false
+    t.datetime "locked_at"
     t.string "name", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false

@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+  include AdminAuthorization
+
   before_action :require_admin
   before_action :set_user
 
@@ -17,10 +19,6 @@ class UsersController < ApplicationController
   end
 
   private
-
-  def require_admin
-    redirect_to root_path, alert: "Not authorized." unless Current.user.admin?
-  end
 
   def set_user
     @user = Current.user.account.users.find(params[:id])

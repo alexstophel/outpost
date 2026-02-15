@@ -2,6 +2,11 @@ require "test_helper"
 
 class AccountTest < ActiveSupport::TestCase
   test "setup? returns false when no accounts exist" do
+    # Delete in correct order to respect foreign keys
+    Message.delete_all
+    Membership.delete_all
+    Room.delete_all
+    Session.delete_all
     User.delete_all
     Account.delete_all
 
@@ -24,6 +29,11 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "generates invite_token on create" do
+    # Delete in correct order to respect foreign keys
+    Message.delete_all
+    Membership.delete_all
+    Room.delete_all
+    Session.delete_all
     User.delete_all
     Account.delete_all
 

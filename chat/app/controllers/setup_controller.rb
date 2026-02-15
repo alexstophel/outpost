@@ -3,17 +3,14 @@ class SetupController < ApplicationController
   before_action :require_no_account
 
   def new
-    @account = Account.new
-    @user = User.new
+    @setup = AccountSetup.new
   end
 
   def create
-    @account = Account.new(account_params)
-    @user = @account.users.build(user_params.merge(admin: true))
+    @setup = AccountSetup.new(setup_params)
 
-    if @account.save
-      create_general_room(@account, @user)
-      start_new_session_for @user
+    if @setup.save
+      start_new_session_for @setup.user
       redirect_to root_path, notice: "Welcome to Outpost!"
     else
       render :new, status: :unprocessable_entity
@@ -26,16 +23,13 @@ class SetupController < ApplicationController
     redirect_to root_path if Account.setup?
   end
 
-  def account_params
-    params.require(:account).permit(:name)
-  end
-
-  def user_params
-    params.require(:user).permit(:name, :email_address, :password, :password_confirmation)
-  end
-
-  def create_general_room(account, user)
-    general = account.rooms.create!(name: "General")
-    general.memberships.create!(user: user)
+  def setup_params
+    {
+      account_name: params[:account][:name],
+      user_name: params[:user][:name],
+      email_address: params[:user][:email_address],
+      password: params[:user][:password],
+      password_confirmation: params[:user][:password_confirmation]
+    }
   end
 end

@@ -1,0 +1,11 @@
+user_one_general:
+  room: general
+  user: one
+
+user_one_random:
+  room: random
+  user: one
+
+user_two_general:
+  room: general
+  user: two

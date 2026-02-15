@@ -1,9 +1,18 @@
 require "test_helper"
 
 class SetupControllerTest < ActionDispatch::IntegrationTest
-  test "new shows setup form when no account exists" do
+  def clear_all_data
+    # Delete in correct order to respect foreign keys
+    Message.delete_all
+    Membership.delete_all
+    Room.delete_all
+    Session.delete_all
     User.delete_all
     Account.delete_all
+  end
+
+  test "new shows setup form when no account exists" do
+    clear_all_data
 
     get new_setup_path
 
@@ -18,8 +27,7 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create sets up account and admin user" do
-    User.delete_all
-    Account.delete_all
+    clear_all_data
 
     post setup_path, params: {
       account: { name: "My Team" },
@@ -40,12 +48,12 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create renders form with errors when account name is blank" do
-    User.delete_all
-    Account.delete_all
+    clear_all_data
 
     post setup_path, params: {
       account: { name: "" },
       user: {
+        name: "Admin User",
         email_address: "admin@example.com",
         password: "password123",
         password_confirmation: "password123"
@@ -57,12 +65,12 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create renders form with errors when passwords do not match" do
-    User.delete_all
-    Account.delete_all
+    clear_all_data
 
     post setup_path, params: {
       account: { name: "My Team" },
       user: {
+        name: "Admin User",
         email_address: "admin@example.com",
         password: "password123",
         password_confirmation: "different"

@@ -12,3 +12,6 @@
 
 # Local docs
 docs/
+
+# Audit reports
+RAILS_AUDIT_REPORT.md

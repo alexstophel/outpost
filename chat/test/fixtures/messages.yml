@@ -1,0 +1,9 @@
+hello:
+  body: Hello, world!
+  room: general
+  user: one
+
+reply:
+  body: Hey there!
+  room: general
+  user: two

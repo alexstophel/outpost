@@ -6,10 +6,16 @@ class SessionsController < ApplicationController
   end
 
   def create
-    if user = User.authenticate_by(params.permit(:email_address, :password))
+    user = User.find_by(email_address: params[:email_address])
+
+    if user&.locked?
+      redirect_to new_session_path, alert: "Account locked. Try again in 30 minutes."
+    elsif user&.authenticate(params[:password])
+      user.record_successful_login!
       start_new_session_for user
       redirect_to after_authentication_url
     else
+      user&.record_failed_login!
       redirect_to new_session_path, alert: "Try another email address or password."
     end
   end

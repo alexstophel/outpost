@@ -1,0 +1,11 @@
+<% if notice = flash[:notice] %>
+  <div class="p-3 bg-[#00ff88]/10 border-2 border-[#00ff88]/50 mb-6">
+    <p class="text-[#00ff88] text-sm"><%= notice %></p>
+  </div>
+<% end %>
+
+<% if alert = flash[:alert] %>
+  <div class="p-3 bg-red-900/30 border-2 border-red-700 mb-6">
+    <p class="text-red-400 text-sm"><%= alert %></p>
+  </div>
+<% end %>

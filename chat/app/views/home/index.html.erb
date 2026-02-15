@@ -1,16 +1,12 @@
 <div class="w-full max-w-md">
   <div class="bg-neutral-900 border-2 border-neutral-700 p-6 shadow-[4px_4px_0_0_#1a1a1a]">
-    <% if notice = flash[:notice] %>
-      <div class="p-3 bg-[#00ff88]/10 border-2 border-[#00ff88]/50 mb-6">
-        <p class="text-[#00ff88] text-sm"><%= notice %></p>
-      </div>
-    <% end %>
+    <%= render "shared/flash" %>
 
     <h1 class="text-2xl uppercase tracking-wider text-[#00ff88] mb-2"><%= Account.first&.name || "Outpost" %></h1>
     <p class="text-sm text-neutral-500">Logged in as <span class="text-neutral-300"><%= Current.user.email_address %></span></p>
 
     <div class="mt-6 pt-6 border-t-2 border-neutral-800">
-      <p class="text-neutral-400 text-sm mb-4">Chat functionality coming soon...</p>
+      <p class="text-neutral-400 text-sm mb-4">You're not a member of any rooms yet.</p>
       
       <div class="flex gap-3">
         <% if Current.user.admin? %>
