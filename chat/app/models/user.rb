@@ -7,7 +7,12 @@ class User < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :rooms, through: :memberships
   has_many :messages, dependent: :destroy
+  has_many :room_reads, dependent: :destroy
   belongs_to :account
+
+  scope :search_by_name, ->(query) {
+    where("name LIKE ?", "%#{sanitize_sql_like(query)}%") if query.present?
+  }
 
   has_one_attached :avatar
 
@@ -36,6 +41,36 @@ class User < ApplicationRecord
 
   def record_successful_login!
     update!(failed_login_attempts: 0, locked_at: nil) if failed_login_attempts > 0
+  end
+
+  # Other users in the same account (excluding self)
+  def account_peers
+    account.users.where.not(id: id)
+  end
+
+  # Get direct message rooms, ordered by most recent activity
+  def direct_message_rooms
+    rooms.direct_messages.left_joins(:messages)
+      .group("rooms.id")
+      .order(Arel.sql("MAX(messages.created_at) DESC NULLS LAST"))
+  end
+
+  # Get channel rooms
+  def channel_rooms
+    rooms.channels
+  end
+
+  # Check if a room has unread messages for this user
+  def has_unread_in?(room)
+    room_read = room_reads.find_by(room: room)
+    return true unless room_read # Never read = unread
+    room_read.unread?
+  end
+
+  # Mark a room as read
+  def mark_room_as_read!(room)
+    room_read = room_reads.find_or_initialize_by(room: room)
+    room_read.update!(last_read_at: Time.current)
   end
 
   private

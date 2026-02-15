@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_154424) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_161726) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "invite_token"
@@ -67,12 +67,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_154424) do
     t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
+  create_table "room_reads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_read_at", null: false
+    t.integer "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["room_id"], name: "index_room_reads_on_room_id"
+    t.index ["user_id", "room_id"], name: "index_room_reads_on_user_id_and_room_id", unique: true
+    t.index ["user_id"], name: "index_room_reads_on_user_id"
+  end
+
   create_table "rooms", force: :cascade do |t|
     t.integer "account_id", null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
+    t.string "room_type", default: "channel", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_rooms_on_account_id"
+    t.index ["room_type"], name: "index_rooms_on_room_type"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -104,6 +117,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_154424) do
   add_foreign_key "memberships", "users"
   add_foreign_key "messages", "rooms"
   add_foreign_key "messages", "users"
+  add_foreign_key "room_reads", "rooms"
+  add_foreign_key "room_reads", "users"
   add_foreign_key "rooms", "accounts"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "accounts"

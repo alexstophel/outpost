@@ -16,6 +16,12 @@ Rails.application.routes.draw do
   # User management (admin only)
   resources :users, only: [ :update, :destroy ]
 
+  # User search (for DMs)
+  resources :user_searches, only: [ :index ]
+
+  # Direct messages
+  resources :direct_messages, only: [ :create ]
+
   # Join via invite link
   get "join/:token", to: "join#show", as: :join
   post "join/:token", to: "join#create"

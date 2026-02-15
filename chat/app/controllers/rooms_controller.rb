@@ -4,6 +4,13 @@ class RoomsController < ApplicationController
   def show
     @messages = @room.messages.includes(:user).order(:created_at)
     @message = Message.new
+
+    # Prepare sidebar data
+    @channels = Current.user.channel_rooms
+    @direct_messages = Current.user.direct_message_rooms.includes(:users)
+
+    # Mark room as read
+    Current.user.mark_room_as_read!(@room)
   end
 
   private

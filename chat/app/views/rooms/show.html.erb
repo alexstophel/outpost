@@ -1,6 +1,6 @@
 <% content_for :fullscreen, true %>
 
-<div class="flex h-full" data-controller="sidebar">
+<div class="flex h-full" data-controller="sidebar dm-search">
   <%# Mobile overlay backdrop %>
   <div 
     class="fixed inset-0 bg-black/50 z-20 md:hidden hidden"
@@ -26,16 +26,50 @@
       </button>
     </div>
 
-    <%# Rooms list %>
+    <%# Navigation %>
     <nav class="flex-1 p-2 overflow-y-auto">
+      <%# Channels section %>
       <div class="text-xs uppercase tracking-wide text-neutral-500 px-3 py-2">Rooms</div>
-      <% Current.user.rooms.each do |room| %>
-        <%= link_to room_path(room), 
-            class: "flex items-center gap-2 px-3 py-2 text-sm #{room == @room ? 'text-neutral-200 bg-neutral-800 border-l-2 border-[#00ff88]' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border-l-2 border-transparent'}",
+      <% @channels.each do |channel| %>
+        <%= link_to room_path(channel), 
+            class: "flex items-center gap-2 px-3 py-2 text-sm #{channel == @room ? 'text-neutral-200 bg-neutral-800 border-l-2 border-[#00ff88]' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border-l-2 border-transparent'}",
             data: { action: "click->sidebar#close" } do %>
           <span class="text-neutral-500">#</span>
-          <span><%= room.name.downcase %></span>
+          <span><%= channel.name.downcase %></span>
         <% end %>
+      <% end %>
+
+      <%# Direct Messages section %>
+      <div class="flex items-center justify-between px-3 py-2 mt-4">
+        <span class="text-xs uppercase tracking-wide text-neutral-500">Direct Messages</span>
+        <button
+          type="button"
+          class="text-neutral-500 hover:text-[#00ff88] transition-colors"
+          data-action="click->dm-search#open"
+          title="New message"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
+      <% @direct_messages.each do |dm| %>
+        <% other_user = dm.other_participant(Current.user) %>
+        <% has_unread = Current.user.has_unread_in?(dm) %>
+        <%= link_to room_path(dm), 
+            class: "flex items-center gap-2 px-3 py-2 text-sm #{dm == @room ? 'text-neutral-200 bg-neutral-800 border-l-2 border-[#00ff88]' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border-l-2 border-transparent'}",
+            data: { action: "click->sidebar#close" } do %>
+          <div class="relative flex-shrink-0">
+            <%= render "users/avatar", user: other_user, size: "xs" %>
+            <% if has_unread && dm != @room %>
+              <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#00ff88] border border-neutral-900"></span>
+            <% end %>
+          </div>
+          <span class="truncate"><%= other_user&.name || "Unknown" %></span>
+        <% end %>
+      <% end %>
+      <% if @direct_messages.empty? %>
+        <div class="px-3 py-2 text-xs text-neutral-600 italic">No conversations yet</div>
       <% end %>
     </nav>
 
@@ -73,18 +107,34 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      <h2 class="text-neutral-200 flex items-center gap-1">
-        <span class="text-neutral-500">#</span>
-        <span><%= @room.name.downcase %></span>
-      </h2>
+      <% if @room.direct_message? %>
+        <% dm_other_user = @room.other_participant(Current.user) %>
+        <h2 class="text-neutral-200 flex items-center gap-2">
+          <%= render "users/avatar", user: dm_other_user, size: "xs" %>
+          <span><%= dm_other_user&.name || "Unknown" %></span>
+        </h2>
+      <% else %>
+        <h2 class="text-neutral-200 flex items-center gap-1">
+          <span class="text-neutral-500">#</span>
+          <span><%= @room.name.downcase %></span>
+        </h2>
+      <% end %>
     </header>
 
     <%# Desktop header %>
     <header class="hidden md:flex items-center px-4 py-3 border-b-2 border-neutral-800">
-      <h2 class="text-neutral-200 flex items-center gap-1">
-        <span class="text-neutral-500">#</span>
-        <span><%= @room.name.downcase %></span>
-      </h2>
+      <% if @room.direct_message? %>
+        <% dm_other_user = @room.other_participant(Current.user) %>
+        <h2 class="text-neutral-200 flex items-center gap-2">
+          <%= render "users/avatar", user: dm_other_user, size: "sm" %>
+          <span><%= dm_other_user&.name || "Unknown" %></span>
+        </h2>
+      <% else %>
+        <h2 class="text-neutral-200 flex items-center gap-1">
+          <span class="text-neutral-500">#</span>
+          <span><%= @room.name.downcase %></span>
+        </h2>
+      <% end %>
     </header>
 
     <%# Messages %>
@@ -107,4 +157,55 @@
       <%= render partial: "messages/form", locals: { room: @room, message: @message } %>
     </div>
   </main>
+
+  <%# DM Search Modal %>
+  <div
+    class="fixed inset-0 z-50 hidden"
+    data-dm-search-target="modal"
+  >
+    <%# Backdrop %>
+    <div 
+      class="absolute inset-0 bg-black/70"
+      data-action="click->dm-search#close"
+    ></div>
+    
+    <%# Modal content %>
+    <div class="absolute inset-x-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md">
+      <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a]">
+        <%# Header %>
+        <div class="flex items-center justify-between p-4 border-b-2 border-neutral-800">
+          <h3 class="text-sm uppercase tracking-wide text-neutral-300">New Message</h3>
+          <button
+            type="button"
+            class="text-neutral-500 hover:text-neutral-300"
+            data-action="click->dm-search#close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <%# Search input %>
+        <div class="p-4">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600"
+            data-dm-search-target="input"
+            data-action="input->dm-search#search keydown->dm-search#handleKeydown"
+            autocomplete="off"
+          >
+        </div>
+        
+        <%# Results %>
+        <div
+          class="max-h-64 overflow-y-auto"
+          data-dm-search-target="results"
+        >
+          <%# Results will be populated by JavaScript %>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

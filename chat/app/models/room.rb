@@ -3,6 +3,61 @@ class Room < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :users, through: :memberships
   has_many :messages, dependent: :destroy
+  has_many :room_reads, dependent: :destroy
+
+  attribute :room_type, :string, default: "channel"
+  enum :room_type, { channel: "channel", direct_message: "direct_message" }
+
+  scope :channels, -> { where(room_type: :channel) }
+  scope :direct_messages, -> { where(room_type: :direct_message) }
 
   validates :name, presence: true
+
+  # For DMs, return the other user's name; for channels, return the room name
+  def display_name_for(user)
+    if direct_message?
+      other_user = users.where.not(id: user.id).first
+      other_user&.name || name
+    else
+      name
+    end
+  end
+
+  # Get the other participant in a DM
+  def other_participant(user)
+    return nil unless direct_message?
+    users.where.not(id: user.id).first
+  end
+
+  # Find the most recent message timestamp for ordering
+  def last_message_at
+    messages.maximum(:created_at) || created_at
+  end
+
+  # Find or create a DM between two users
+  def self.find_or_create_dm(user_a, user_b, account)
+    # Find existing DM between these exact two users
+    existing = direct_messages
+      .where(account: account)
+      .joins(:memberships)
+      .where(memberships: { user_id: [user_a.id, user_b.id] })
+      .group("rooms.id")
+      .having("COUNT(DISTINCT memberships.user_id) = 2")
+      .having("COUNT(memberships.id) = 2")
+      .first
+
+    return existing if existing
+
+    # Create new DM
+    transaction do
+      room = create!(
+        account: account,
+        room_type: :direct_message,
+        name: "DM-#{[user_a.id, user_b.id].sort.join('-')}"
+      )
+      room.memberships.create!(user: user_a)
+      room.memberships.create!(user: user_b)
+      room
+    end
+  end
 end
