@@ -1,6 +1,6 @@
 <% content_for :fullscreen, true %>
 
-<div class="flex h-full" data-controller="sidebar dm-search">
+<div class="flex h-full" data-controller="sidebar dm-search room-create room-browse room-settings">
   <%# Mobile overlay backdrop %>
   <div 
     class="fixed inset-0 bg-black/50 z-20 md:hidden hidden"
@@ -29,15 +29,44 @@
     <%# Navigation %>
     <nav class="flex-1 p-2 overflow-y-auto">
       <%# Channels section %>
-      <div class="text-xs uppercase tracking-wide text-neutral-500 px-3 py-2">Rooms</div>
+      <div class="flex items-center justify-between px-3 py-2">
+        <span class="text-xs uppercase tracking-wide text-neutral-500">Rooms</span>
+        <button
+          type="button"
+          class="text-neutral-500 hover:text-[#00ff88] transition-colors"
+          data-action="click->room-create#open"
+          title="Create room"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
       <% @channels.each do |channel| %>
         <%= link_to room_path(channel), 
             class: "flex items-center gap-2 px-3 py-2 text-sm #{channel == @room ? 'text-neutral-200 bg-neutral-800 border-l-2 border-[#00ff88]' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800 border-l-2 border-transparent'}",
             data: { action: "click->sidebar#close" } do %>
-          <span class="text-neutral-500">#</span>
+          <% if channel.visibility_private_room? %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          <% else %>
+            <span class="text-neutral-500">#</span>
+          <% end %>
           <span><%= channel.name.downcase %></span>
         <% end %>
       <% end %>
+      <%# Browse rooms link %>
+      <button
+        type="button"
+        class="flex items-center gap-2 px-3 py-2 text-sm text-neutral-500 hover:text-neutral-300 transition-colors w-full text-left"
+        data-action="click->room-browse#open"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span>Browse rooms...</span>
+      </button>
 
       <%# Direct Messages section %>
       <div class="flex items-center justify-between px-3 py-2 mt-4">
@@ -98,31 +127,51 @@
   <%# Main content %>
   <main class="flex-1 flex flex-col min-w-0">
     <%# Mobile header %>
-    <header class="md:hidden flex items-center gap-3 px-4 py-3 border-b-2 border-neutral-800 bg-neutral-900">
-      <button 
-        class="text-neutral-400 hover:text-neutral-200 p-1"
-        data-action="click->sidebar#open"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      <% if @room.direct_message? %>
-        <% dm_other_user = @room.other_participant(Current.user) %>
-        <h2 class="text-neutral-200 flex items-center gap-2">
-          <%= render "users/avatar", user: dm_other_user, size: "xs" %>
-          <span><%= dm_other_user&.name || "Unknown" %></span>
-        </h2>
-      <% else %>
-        <h2 class="text-neutral-200 flex items-center gap-1">
-          <span class="text-neutral-500">#</span>
-          <span><%= @room.name.downcase %></span>
-        </h2>
+    <header class="md:hidden flex items-center justify-between px-4 py-3 border-b-2 border-neutral-800 bg-neutral-900">
+      <div class="flex items-center gap-3">
+        <button 
+          class="text-neutral-400 hover:text-neutral-200 p-1"
+          data-action="click->sidebar#open"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <% if @room.direct_message? %>
+          <% dm_other_user = @room.other_participant(Current.user) %>
+          <h2 class="text-neutral-200 flex items-center gap-2">
+            <%= render "users/avatar", user: dm_other_user, size: "xs" %>
+            <span><%= dm_other_user&.name || "Unknown" %></span>
+          </h2>
+        <% else %>
+          <h2 class="text-neutral-200 flex items-center gap-1">
+            <% if @room.visibility_private_room? %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            <% else %>
+              <span class="text-neutral-500">#</span>
+            <% end %>
+            <span><%= @room.name.downcase %></span>
+          </h2>
+        <% end %>
+      </div>
+      <% if @room.channel? && !@room.default_room? %>
+        <button
+          type="button"
+          class="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+          data-action="click->room-settings#toggle"
+          title="Room settings"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        </button>
       <% end %>
     </header>
 
     <%# Desktop header %>
-    <header class="hidden md:flex items-center px-4 py-3 border-b-2 border-neutral-800">
+    <header class="hidden md:flex items-center justify-between px-4 py-3 border-b-2 border-neutral-800">
       <% if @room.direct_message? %>
         <% dm_other_user = @room.other_participant(Current.user) %>
         <h2 class="text-neutral-200 flex items-center gap-2">
@@ -131,9 +180,27 @@
         </h2>
       <% else %>
         <h2 class="text-neutral-200 flex items-center gap-1">
-          <span class="text-neutral-500">#</span>
+          <% if @room.visibility_private_room? %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          <% else %>
+            <span class="text-neutral-500">#</span>
+          <% end %>
           <span><%= @room.name.downcase %></span>
         </h2>
+        <% unless @room.default_room? %>
+          <button
+            type="button"
+            class="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+            data-action="click->room-settings#toggle"
+            title="Room settings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+        <% end %>
       <% end %>
     </header>
 
@@ -146,8 +213,12 @@
     >
       <%= turbo_stream_from @room %>
       <div id="messages" class="py-4">
-        <% @messages.each do |message| %>
-          <%= render partial: "messages/message", locals: { message: message } %>
+        <% if @messages.empty? %>
+          <%= render partial: "rooms/empty_state", locals: { room: @room } %>
+        <% else %>
+          <% @messages.each do |message| %>
+            <%= render partial: "messages/message", locals: { message: message } %>
+          <% end %>
         <% end %>
       </div>
     </div>
@@ -208,4 +279,348 @@
       </div>
     </div>
   </div>
+
+  <%# Create Room Modal %>
+  <div
+    class="fixed inset-0 z-50 hidden"
+    data-room-create-target="modal"
+  >
+    <%# Backdrop %>
+    <div 
+      class="absolute inset-0 bg-black/70"
+      data-action="click->room-create#close"
+    ></div>
+    
+    <%# Modal content %>
+    <div class="absolute inset-x-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md">
+      <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a]">
+        <%# Header %>
+        <div class="flex items-center justify-between p-4 border-b-2 border-neutral-800">
+          <h3 class="text-sm uppercase tracking-wide text-neutral-300">Create Room</h3>
+          <button
+            type="button"
+            class="text-neutral-500 hover:text-neutral-300"
+            data-action="click->room-create#close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <%# Form %>
+        <%= form_with url: rooms_path, method: :post, data: { action: "submit->room-create#submit" } do |f| %>
+          <div class="p-4 space-y-4">
+            <%# Room name %>
+            <div>
+              <label class="block text-xs uppercase tracking-wide text-neutral-500 mb-2">Room Name</label>
+              <input
+                type="text"
+                name="room[name]"
+                placeholder="general-chat"
+                class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600"
+                data-room-create-target="nameInput"
+                required
+                autocomplete="off"
+              >
+            </div>
+
+            <%# Visibility %>
+            <div>
+              <label class="block text-xs uppercase tracking-wide text-neutral-500 mb-2">Visibility</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-2 cursor-pointer hover:bg-neutral-800 transition-colors group">
+                  <input type="radio" name="room[visibility]" value="public" checked class="sr-only peer">
+                  <span class="w-4 h-4 border-2 border-neutral-600 peer-checked:border-[#00ff88] peer-checked:bg-[#00ff88] flex-shrink-0"></span>
+                  <div>
+                    <div class="text-sm text-neutral-200">Public</div>
+                    <div class="text-xs text-neutral-500">Anyone can find and join</div>
+                  </div>
+                </label>
+                <label class="flex items-center gap-3 p-2 cursor-pointer hover:bg-neutral-800 transition-colors group">
+                  <input type="radio" name="room[visibility]" value="private" class="sr-only peer">
+                  <span class="w-4 h-4 border-2 border-neutral-600 peer-checked:border-[#00ff88] peer-checked:bg-[#00ff88] flex-shrink-0"></span>
+                  <div>
+                    <div class="text-sm text-neutral-200">Private</div>
+                    <div class="text-xs text-neutral-500">Invite only</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <%# Invite members %>
+            <div>
+              <label class="block text-xs uppercase tracking-wide text-neutral-500 mb-2">Invite Members (optional)</label>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600"
+                data-room-create-target="searchInput"
+                data-action="input->room-create#searchUsers"
+                autocomplete="off"
+              >
+              <%# Search results %>
+              <div
+                class="mt-1 max-h-32 overflow-y-auto bg-neutral-800 border-2 border-neutral-700 hidden"
+                data-room-create-target="searchResults"
+              ></div>
+              <%# Selected members %>
+              <div
+                class="flex flex-wrap gap-2 mt-2"
+                data-room-create-target="selectedMembers"
+              ></div>
+            </div>
+          </div>
+
+          <%# Submit button %>
+          <div class="p-4 border-t-2 border-neutral-800">
+            <button
+              type="submit"
+              class="w-full px-4 py-2 bg-[#00ff88] hover:bg-[#00cc6a] text-black font-medium border-2 border-black shadow-[4px_4px_0_0_#000] hover:shadow-[2px_2px_0_0_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-wide"
+            >
+              Create Room
+            </button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Browse Rooms Modal %>
+  <div
+    class="fixed inset-0 z-50 hidden"
+    data-room-browse-target="modal"
+  >
+    <%# Backdrop %>
+    <div 
+      class="absolute inset-0 bg-black/70"
+      data-action="click->room-browse#close"
+    ></div>
+    
+    <%# Modal content %>
+    <div class="absolute inset-x-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md">
+      <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a]">
+        <%# Header %>
+        <div class="flex items-center justify-between p-4 border-b-2 border-neutral-800">
+          <h3 class="text-sm uppercase tracking-wide text-neutral-300">Browse Rooms</h3>
+          <button
+            type="button"
+            class="text-neutral-500 hover:text-neutral-300"
+            data-action="click->room-browse#close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <%# Search input %>
+        <div class="p-4">
+          <input
+            type="text"
+            placeholder="Search rooms..."
+            class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600"
+            data-room-browse-target="searchInput"
+            data-action="input->room-browse#filterRooms"
+            autocomplete="off"
+          >
+        </div>
+        
+        <%# Room list %>
+        <div
+          class="max-h-64 overflow-y-auto"
+          data-room-browse-target="roomList"
+        >
+          <div class="px-4 py-3 text-sm text-neutral-500 italic">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Room Settings Dropdown %>
+  <% if @room.channel? %>
+    <div data-controller="modal">
+    <div
+      class="fixed z-40 hidden"
+      data-room-settings-target="dropdown"
+      style="top: 60px; right: 16px;"
+    >
+      <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a] w-72">
+        <%# Room info %>
+        <div class="p-4 border-b-2 border-neutral-800">
+          <div class="flex items-center gap-2 text-neutral-200">
+            <% if @room.visibility_private_room? %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            <% else %>
+              <span class="text-neutral-500">#</span>
+            <% end %>
+            <span class="font-medium"><%= @room.name.downcase %></span>
+          </div>
+          <div class="text-xs text-neutral-500 mt-1">
+            <%= @room.visibility_private_room? ? "Private room" : "Public room" %> · <%= @members.count %> <%= "member".pluralize(@members.count) %>
+          </div>
+        </div>
+
+        <%# Members list %>
+        <div class="p-4 border-b-2 border-neutral-800">
+          <div class="text-xs uppercase tracking-wide text-neutral-500 mb-2">Members</div>
+          <div class="space-y-2 max-h-40 overflow-y-auto" data-room-settings-target="membersList">
+            <% @members.each do |membership| %>
+              <div class="flex items-center justify-between gap-2 py-1">
+                <div class="flex items-center gap-2 min-w-0">
+                  <%= render "users/avatar", user: membership.user, size: "xs" %>
+                  <span class="text-sm text-neutral-300 truncate"><%= membership.user.name %></span>
+                  <% if membership.admin? %>
+                    <span class="text-xs text-[#00ff88]">admin</span>
+                  <% end %>
+                </div>
+                <% if @is_admin && @room.membership_editable? && membership.user != Current.user %>
+                  <button
+                    type="button"
+                    class="text-neutral-500 hover:text-red-400 transition-colors p-1"
+                    data-action="click->room-settings#confirmRemoveMember"
+                    data-membership-id="<%= membership.id %>"
+                    data-user-name="<%= membership.user.name %>"
+                    title="Remove member"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <%# Add member (admin only, not for default room) %>
+        <% if @is_admin && @room.membership_editable? %>
+          <div class="p-4 border-b-2 border-neutral-800">
+            <div class="text-xs uppercase tracking-wide text-neutral-500 mb-2">Add Member</div>
+            <input
+              type="text"
+              placeholder="Search by name..."
+              class="w-full px-3 py-2 bg-neutral-800 text-neutral-200 border-2 border-neutral-700 focus:border-[#00ff88] focus:outline-none placeholder:text-neutral-600 text-sm"
+              data-room-settings-target="addMemberInput"
+              data-action="input->room-settings#searchUsers"
+              autocomplete="off"
+            >
+            <div
+              class="mt-1 max-h-32 overflow-y-auto hidden"
+              data-room-settings-target="addMemberResults"
+            ></div>
+          </div>
+        <% end %>
+
+        <%# Actions %>
+        <div class="p-4 space-y-2">
+          <% if @room.membership_editable? %>
+            <%= button_to room_membership_path(@room, Current.user.membership_for(@room)), 
+                method: :delete,
+                class: "w-full px-3 py-2 text-sm text-neutral-400 hover:text-neutral-200 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 uppercase tracking-wide transition-colors text-center cursor-pointer" do %>
+              Leave Room
+            <% end %>
+          <% end %>
+          
+          <% if @is_admin && @room.deletable? %>
+            <button
+              type="button"
+              data-action="click->modal#open"
+              class="w-full px-3 py-2 text-sm text-red-400 hover:text-red-300 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 uppercase tracking-wide transition-colors text-center cursor-pointer"
+            >
+              Delete Room
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# Delete Room Confirmation Modal %>
+    <% if @is_admin && @room.deletable? %>
+      <dialog 
+        data-modal-target="dialog"
+        data-action="click->modal#closeOnBackdropClick"
+        class="bg-transparent p-0 backdrop:bg-black/70 fixed inset-0 m-auto"
+      >
+        <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a] w-[calc(100vw-2rem)] sm:w-80 max-w-md mx-4 sm:mx-0">
+          <div class="px-4 py-3 border-b-2 border-neutral-700 flex items-center justify-between">
+            <h3 class="text-neutral-200 uppercase tracking-wide text-sm">Delete Room</h3>
+            <button 
+              type="button" 
+              data-action="click->modal#close"
+              class="text-neutral-500 hover:text-neutral-300 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-4">
+            <p class="text-neutral-300 text-sm mb-4">Are you sure you want to delete <strong class="text-neutral-200"><%= @room.name %></strong>? This action cannot be undone.</p>
+            <div class="flex gap-2 justify-end">
+              <button 
+                type="button"
+                data-action="click->modal#close"
+                class="px-3 py-1.5 text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-2 border-neutral-600 shadow-[2px_2px_0_0_#333] hover:shadow-[1px_1px_0_0_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide"
+              >
+                Cancel
+              </button>
+              <%= button_to room_path(@room), 
+                  method: :delete, 
+                  class: "px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white font-medium border-2 border-red-900 shadow-[2px_2px_0_0_#7f1d1d] hover:shadow-[1px_1px_0_0_#7f1d1d] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide" do %>
+                Delete
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </dialog>
+    <% end %>
+
+    <%# Remove Member Confirmation Modal %>
+    <% if @is_admin %>
+      <dialog 
+        data-room-settings-target="removeMemberDialog"
+        data-action="click->room-settings#closeRemoveMemberOnBackdropClick"
+        class="bg-transparent p-0 backdrop:bg-black/70 fixed inset-0 m-auto"
+      >
+        <div class="bg-neutral-900 border-2 border-neutral-700 shadow-[4px_4px_0_0_#1a1a1a] w-[calc(100vw-2rem)] sm:w-80 max-w-md mx-4 sm:mx-0">
+          <div class="px-4 py-3 border-b-2 border-neutral-700 flex items-center justify-between">
+            <h3 class="text-neutral-200 uppercase tracking-wide text-sm">Remove Member</h3>
+            <button 
+              type="button" 
+              data-action="click->room-settings#closeRemoveMemberDialog"
+              class="text-neutral-500 hover:text-neutral-300 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-4">
+            <p class="text-neutral-300 text-sm mb-4">Are you sure you want to remove <strong class="text-neutral-200" data-room-settings-target="removeMemberName"></strong> from this room?</p>
+            <div class="flex gap-2 justify-end">
+              <button 
+                type="button"
+                data-action="click->room-settings#closeRemoveMemberDialog"
+                class="px-3 py-1.5 text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-2 border-neutral-600 shadow-[2px_2px_0_0_#333] hover:shadow-[1px_1px_0_0_#333] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide"
+              >
+                Cancel
+              </button>
+              <%= form_with url: "#", method: :delete, data: { room_settings_target: "removeMemberForm" } do %>
+                <button 
+                  type="submit"
+                  class="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white font-medium border-2 border-red-900 shadow-[2px_2px_0_0_#7f1d1d] hover:shadow-[1px_1px_0_0_#7f1d1d] hover:translate-x-[1px] hover:translate-y-[1px] transition-all uppercase tracking-wide"
+                >
+                  Remove
+                </button>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </dialog>
+    <% end %>
+    </div>
+  <% end %>
 </div>

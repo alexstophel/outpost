@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_161726) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_163945) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "invite_token"
@@ -49,9 +49,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_161726) do
 
   create_table "memberships", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "role", default: "member", null: false
     t.integer "room_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["role"], name: "index_memberships_on_role"
     t.index ["room_id", "user_id"], name: "index_memberships_on_room_id_and_user_id", unique: true
     t.index ["room_id"], name: "index_memberships_on_room_id"
     t.index ["user_id"], name: "index_memberships_on_user_id"
@@ -84,8 +86,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_161726) do
     t.string "name", null: false
     t.string "room_type", default: "channel", null: false
     t.datetime "updated_at", null: false
+    t.string "visibility", default: "public", null: false
     t.index ["account_id"], name: "index_rooms_on_account_id"
     t.index ["room_type"], name: "index_rooms_on_room_type"
+    t.index ["visibility"], name: "index_rooms_on_visibility"
   end
 
   create_table "sessions", force: :cascade do |t|

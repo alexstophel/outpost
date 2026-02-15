@@ -4,6 +4,10 @@ class MessageBroadcast
   end
 
   def deliver_create
+    # Remove empty state if present
+    @message.broadcast_remove_to @message.room, target: "empty-room-state"
+
+    # Append the new message
     @message.broadcast_append_to @message.room,
       target: "messages",
       partial: "messages/message",
@@ -20,6 +24,14 @@ class MessageBroadcast
   def deliver_destroy
     @message.broadcast_remove_to @message.room,
       target: ActionView::RecordIdentifier.dom_id(@message)
+
+    # Show empty state if this was the last message
+    if @message.room.messages.count == 0
+      @message.broadcast_append_to @message.room,
+        target: "messages",
+        partial: "rooms/empty_state",
+        locals: { room: @message.room }
+    end
   end
 
   private

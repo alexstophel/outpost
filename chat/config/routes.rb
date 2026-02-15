@@ -27,8 +27,9 @@ Rails.application.routes.draw do
   post "join/:token", to: "join#create"
 
   # Chat
-  resources :rooms, only: [ :show ] do
+  resources :rooms, only: [ :index, :show, :create, :destroy ] do
     resources :messages, only: [ :create, :update, :destroy ]
+    resources :memberships, only: [ :create, :destroy ]
   end
 
   # Health check

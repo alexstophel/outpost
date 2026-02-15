@@ -8,10 +8,43 @@ class Room < ApplicationRecord
   attribute :room_type, :string, default: "channel"
   enum :room_type, { channel: "channel", direct_message: "direct_message" }
 
+  attribute :visibility, :string, default: "public"
+  enum :visibility, { public_room: "public", private_room: "private" }, prefix: :visibility
+
   scope :channels, -> { where(room_type: :channel) }
   scope :direct_messages, -> { where(room_type: :direct_message) }
 
+  # Public rooms that a user can see and join (not already a member)
+  scope :joinable_by, ->(user) {
+    channels.where(visibility: "public", account: user.account)
+      .where.not(id: user.room_ids)
+  }
+
+  # Rooms visible to a user (public or member of)
+  scope :visible_to, ->(user) {
+    channels
+      .left_joins(:memberships)
+      .where(account: user.account)
+      .where("rooms.visibility = 'public' OR memberships.user_id = ?", user.id)
+      .distinct
+  }
+
   validates :name, presence: true
+
+  # General room is the default room everyone joins
+  def default_room?
+    name.downcase == "general"
+  end
+
+  # General room cannot be deleted
+  def deletable?
+    !default_room?
+  end
+
+  # General room membership cannot be modified
+  def membership_editable?
+    !default_room?
+  end
 
   # For DMs, return the other user's name; for channels, return the room name
   def display_name_for(user)

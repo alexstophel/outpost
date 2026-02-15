@@ -73,6 +73,21 @@ class User < ApplicationRecord
     room_read.update!(last_read_at: Time.current)
   end
 
+  # Check if user is an admin of a room
+  def admin_of?(room)
+    memberships.find_by(room: room)&.admin?
+  end
+
+  # Check if user is a member of a room
+  def member_of?(room)
+    rooms.include?(room)
+  end
+
+  # Get membership for a specific room
+  def membership_for(room)
+    memberships.find_by(room: room)
+  end
+
   private
 
   def avatar_file_size

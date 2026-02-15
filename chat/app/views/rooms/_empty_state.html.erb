@@ -1,0 +1,29 @@
+<div id="empty-room-state" class="flex flex-col items-center justify-center h-full text-center px-4 py-12">
+  <div class="text-6xl mb-4">
+    <% if room.direct_message? %>
+      <span class="inline-block animate-pulse">👋</span>
+    <% else %>
+      <span class="inline-block">🏜️</span>
+    <% end %>
+  </div>
+  <h3 class="text-xl text-neutral-300 mb-2">
+    <% if room.direct_message? %>
+      Start a conversation
+    <% else %>
+      It's quiet... too quiet
+    <% end %>
+  </h3>
+  <p class="text-neutral-500 max-w-sm">
+    <% if room.direct_message? %>
+      Send a message to break the ice. Don't be shy!
+    <% elsif room.default_room? %>
+      Be the hero this channel deserves. Type something below and make history.
+    <% else %>
+      This room is emptier than a developer's coffee cup on Monday morning. Be the first to say something!
+    <% end %>
+  </p>
+  <div class="mt-6 text-neutral-600 text-sm font-mono">
+    <span class="text-[#00ff88]">></span> awaiting transmission_
+    <span class="inline-block w-2 h-4 bg-[#00ff88] ml-1 animate-pulse"></span>
+  </div>
+</div>
