@@ -17,13 +17,7 @@
       <div>
         <label class="block text-sm text-neutral-400 uppercase tracking-wide mb-3">Avatar</label>
         <div class="flex items-center gap-4">
-          <div class="w-16 h-16 bg-neutral-700 border-2 border-neutral-600 flex-shrink-0 flex items-center justify-center text-xl text-neutral-400 overflow-hidden">
-            <% if Current.user.avatar.attached? %>
-              <%= image_tag Current.user.avatar, class: "w-full h-full object-cover" %>
-            <% else %>
-              <%= Current.user.name.first.upcase %>
-            <% end %>
-          </div>
+          <%= render "users/avatar", user: Current.user, size: "lg" %>
           <div class="flex-1">
             <%= form.file_field :avatar, 
                 accept: "image/*",

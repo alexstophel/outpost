@@ -10,7 +10,7 @@ class UserSearchesController < ApplicationController
       {
         id: user.id,
         name: user.name,
-        avatar_url: user.avatar.attached? ? url_for(user.avatar.variant(resize_to_fill: [40, 40])) : nil
+        avatar_url: user.avatar.attached? ? url_for(user.avatar.variant(:md)) : nil
       }
     }
   end

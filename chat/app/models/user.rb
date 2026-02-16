@@ -15,7 +15,13 @@ class User < ApplicationRecord
     where("name LIKE ?", "%#{sanitize_sql_like(query)}%") if query.present?
   }
 
-  has_one_attached :avatar
+  has_one_attached :avatar do |attachable|
+    attachable.variant :xs, resize_to_fill: [24, 24]
+    attachable.variant :sm, resize_to_fill: [32, 32]
+    attachable.variant :md, resize_to_fill: [40, 40]
+    attachable.variant :lg, resize_to_fill: [64, 64]
+  end
+
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
