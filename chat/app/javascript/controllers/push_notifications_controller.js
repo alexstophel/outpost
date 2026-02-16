@@ -17,6 +17,12 @@ export default class extends Controller {
       return
     }
 
+    // Check for iOS Safari that requires PWA installation
+    if (this.isIOSSafari && !this.isStandalone) {
+      this.setStatus("ios-needs-install")
+      return
+    }
+
     try {
       const registration = await navigator.serviceWorker.register("/service-worker")
       this.swRegistration = registration
@@ -32,6 +38,19 @@ export default class extends Controller {
       console.error("Service worker registration failed:", error)
       this.setStatus("error")
     }
+  }
+
+  // Detect iOS Safari (not Chrome/Firefox on iOS, which also can't do push)
+  get isIOSSafari() {
+    const ua = navigator.userAgent
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    return isIOS
+  }
+
+  // Check if running as installed PWA (standalone mode)
+  get isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || 
+           window.navigator.standalone === true
   }
 
   async toggle() {
@@ -75,7 +94,14 @@ export default class extends Controller {
       this.setStatus("subscribed")
     } catch (error) {
       console.error("Push subscription failed:", error)
-      this.setStatus("error")
+      
+      // Provide more specific error messages
+      if (this.isIOSSafari) {
+        // iOS 16.4+ required for push, and must be installed as PWA
+        this.setStatus("ios-needs-install")
+      } else {
+        this.setStatus("error")
+      }
     }
   }
 
@@ -148,6 +174,10 @@ export default class extends Controller {
           break
         case "not-configured":
           button.textContent = "Not available"
+          button.disabled = true
+          break
+        case "ios-needs-install":
+          button.textContent = "Add to Home Screen first"
           button.disabled = true
           break
         case "error":
