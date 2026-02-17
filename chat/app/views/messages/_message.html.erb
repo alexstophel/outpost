@@ -8,7 +8,11 @@
   <div class="min-w-0 flex-1">
     <div class="flex items-baseline gap-2">
       <span class="text-sm font-medium text-neutral-200"><%= message.user.name %></span>
-      <span class="text-xs text-neutral-600"><%= message.created_at.strftime("%l:%M %p").strip %></span>
+      <span 
+        class="text-xs text-neutral-600"
+        data-controller="local-time"
+        data-local-time-datetime-value="<%= message.created_at.iso8601 %>"
+      ><%= message.created_at.strftime("%l:%M %p").strip %></span>
       <% if message.user == Current.user %>
         <div data-controller="dropdown" class="relative ml-auto md:ml-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <button 
