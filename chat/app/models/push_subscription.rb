@@ -1,4 +1,6 @@
 class PushSubscription < ApplicationRecord
+  WEBPUSH_TIMEOUT_SECONDS = 10
+
   belongs_to :user
 
   validates :endpoint, presence: true, uniqueness: true
@@ -19,18 +21,22 @@ class PushSubscription < ApplicationRecord
       }
     }
 
-    WebPush.payload_send(
-      message: message.to_json,
-      endpoint: endpoint,
-      p256dh: p256dh,
-      auth: auth,
-      vapid: PushSubscription.vapid_credentials
-    )
+    Timeout.timeout(WEBPUSH_TIMEOUT_SECONDS) do
+      WebPush.payload_send(
+        message: message.to_json,
+        endpoint: endpoint,
+        p256dh: p256dh,
+        auth: auth,
+        vapid: PushSubscription.vapid_credentials
+      )
+    end
   rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription
     # Subscription is no longer valid, remove it
     destroy
-  rescue WebPush::Error => e
+  rescue WebPush::Error, Timeout::Error => e
     Rails.logger.error "Push notification failed: #{e.message}"
+    # TODO: Add error tracking when service is configured (e.g., Sentry, Honeybadger)
+    # ErrorTracker.notify(e, context: { endpoint: endpoint, user_id: user_id })
   end
 
   class << self

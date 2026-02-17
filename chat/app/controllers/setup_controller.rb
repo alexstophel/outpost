@@ -23,6 +23,9 @@ class SetupController < ApplicationController
     redirect_to root_path if Account.setup?
   end
 
+  # Maps nested params from two different namespaces (account, user) to
+  # flat attributes for AccountSetup. This approach is intentional as the
+  # form has separate fieldsets for account and user information.
   def setup_params
     {
       account_name: params[:account][:name],

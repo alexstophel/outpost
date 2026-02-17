@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_193258) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_001908) do
   create_table "accounts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "invite_token"
@@ -98,6 +98,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_193258) do
     t.string "room_type", default: "channel", null: false
     t.datetime "updated_at", null: false
     t.string "visibility", default: "public", null: false
+    t.index ["account_id", "name"], name: "index_rooms_on_account_id_and_name"
     t.index ["account_id"], name: "index_rooms_on_account_id"
     t.index ["room_type"], name: "index_rooms_on_room_type"
     t.index ["visibility"], name: "index_rooms_on_visibility"

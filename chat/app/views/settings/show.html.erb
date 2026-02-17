@@ -8,17 +8,17 @@
       <h2 class="text-sm uppercase tracking-wide text-neutral-400 mb-4">Invite Link</h2>
       <p class="text-sm text-neutral-500 mb-4">Share this link to invite new users to <%= @account.name %>.</p>
       
-      <div class="flex gap-2">
+      <div class="flex gap-2" data-controller="clipboard">
         <input 
           type="text" 
           value="<%= @account.invite_url(host: ENV.fetch('OUTPOST_HOST', request.base_url)) %>" 
           readonly 
           class="flex-1 px-3 py-2 bg-neutral-800 text-neutral-300 border-2 border-neutral-700 text-sm font-mono"
-          id="invite-link"
+          data-clipboard-target="source"
         >
         <button 
           type="button"
-          onclick="navigator.clipboard.writeText(document.getElementById('invite-link').value)"
+          data-action="click->clipboard#copy"
           class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-2 border-neutral-600 shadow-[4px_4px_0_0_#333] hover:shadow-[2px_2px_0_0_#333] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer uppercase tracking-wide text-sm"
         >
           Copy

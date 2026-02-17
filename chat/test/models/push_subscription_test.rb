@@ -122,6 +122,15 @@ class PushSubscriptionTest < ActiveSupport::TestCase
     ENV["VAPID_PUBLIC_KEY"] = original
   end
 
+  test "vapid_private_key returns ENV value" do
+    original = ENV["VAPID_PRIVATE_KEY"]
+    ENV["VAPID_PRIVATE_KEY"] = "my-test-private-key"
+
+    assert_equal "my-test-private-key", PushSubscription.vapid_private_key
+  ensure
+    ENV["VAPID_PRIVATE_KEY"] = original
+  end
+
   test "vapid_credentials returns hash with both keys" do
     original_public = ENV["VAPID_PUBLIC_KEY"]
     original_private = ENV["VAPID_PRIVATE_KEY"]

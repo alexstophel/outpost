@@ -79,9 +79,16 @@ class Room < ApplicationRecord
     messages.where("created_at > ?", timestamp).exists?
   end
 
-  # Find or create a DM between two users
+  # Find or create a DM between two users.
+  #
+  # The query finds a room that:
+  # 1. Is a direct_message type in the given account
+  # 2. Has memberships for both user_a AND user_b
+  # 3. Has exactly 2 distinct users (not a group)
+  # 4. Has exactly 2 memberships total (ensures it's only these two users)
+  #
+  # If complexity grows, consider extracting to DirectMessageFinder query object.
   def self.find_or_create_dm(user_a, user_b, account)
-    # Find existing DM between these exact two users
     existing = direct_messages
       .where(account: account)
       .joins(:memberships)

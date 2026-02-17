@@ -1,3 +1,8 @@
+# User model handles authentication, lockout, and room membership.
+#
+# NOTE: This model is approaching 150 lines. If it grows further, consider extracting:
+# - UserLockout concern for lockout-related methods
+# - UserRooms query object for room/DM queries
 class User < ApplicationRecord
   MAX_FAILED_ATTEMPTS = 5
   LOCKOUT_DURATION = 30.minutes
@@ -16,10 +21,10 @@ class User < ApplicationRecord
   }
 
   has_one_attached :avatar do |attachable|
-    attachable.variant :xs, resize_to_fill: [24, 24]
-    attachable.variant :sm, resize_to_fill: [32, 32]
-    attachable.variant :md, resize_to_fill: [40, 40]
-    attachable.variant :lg, resize_to_fill: [64, 64]
+    attachable.variant :xs, resize_to_fill: [ 24, 24 ]
+    attachable.variant :sm, resize_to_fill: [ 32, 32 ]
+    attachable.variant :md, resize_to_fill: [ 40, 40 ]
+    attachable.variant :lg, resize_to_fill: [ 64, 64 ]
   end
 
 

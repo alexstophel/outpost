@@ -1,4 +1,6 @@
 class MessageBroadcast
+  PUSH_NOTIFICATION_BODY_MAX_LENGTH = 100
+
   def initialize(message)
     @message = message
   end
@@ -71,7 +73,7 @@ class MessageBroadcast
     end
   end
 
-  def truncate_body(text, max_length: 100)
+  def truncate_body(text, max_length: PUSH_NOTIFICATION_BODY_MAX_LENGTH)
     return text if text.length <= max_length
     "#{text[0, max_length - 1]}..."
   end
